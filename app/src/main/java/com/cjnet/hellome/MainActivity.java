@@ -1,7 +1,9 @@
 package com.cjnet.hellome;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Configuration;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
@@ -25,14 +27,19 @@ public class MainActivity extends AppCompatActivity {
     private Handler uiHandler = new Handler();
     private Vibrator v;
     private Thread t;
-    private String eventTime = "02/12/2019 13:29:00";
-    private String babyName = "Name Here";
+    private String eventTime = "07/12/2019 13:00:00";
+    private String babyName = "NAME HERE";
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        Intent intent = getIntent();
+        String action = intent.getAction();
+        Uri data = intent.getData();
+
         mTextDays = ((TextView) findViewById(R.id.textDays));
         mTextName = ((TextView) findViewById(R.id.name_string));
         layout_Date = (RelativeLayout) findViewById(R.id.date_layout);
@@ -41,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
         ((RelativeLayout) findViewById(R.id.layout_main))
                 .setBackground(getDrawable(R.drawable.hello_me_bg));
         v = (Vibrator) getApplicationContext().getSystemService(Context.VIBRATOR_SERVICE);
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/M/yyyy hh:mm:ss");
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
         try {
             date1 = new Date();
             date2 = simpleDateFormat.parse(eventTime);
