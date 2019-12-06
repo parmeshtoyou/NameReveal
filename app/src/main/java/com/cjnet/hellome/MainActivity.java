@@ -28,7 +28,7 @@ public class MainActivity extends AppCompatActivity {
     private Vibrator v;
     private Thread t;
     private String eventTime = "07/12/2019 13:00:00";
-    private String babyName = "NAME HERE";
+    private String babyName = "RISHANK";
 
 
     @Override
