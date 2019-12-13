@@ -28,8 +28,11 @@ public class MainActivity extends AppCompatActivity {
     private Vibrator v;
     private Thread t;
     private String eventTime = "07/12/2019 13:00:00";
-    private String babyName = "RISHANK";
+    private String babyName = "NAME";
+    private NameCounter runnable;
+    private boolean exited = false;
 
+    private static final String TAG = "MainActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,7 +124,7 @@ public class MainActivity extends AppCompatActivity {
 
         layout_Date.setVisibility(View.GONE);
         layout_Name.setVisibility(View.VISIBLE);
-        NameCounter runnable = new NameCounter(name);
+        runnable = new NameCounter(name);
         t = new Thread(runnable);
         t.start();
     }
@@ -138,20 +141,23 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void run() {
             while (count < name.length()) {
-                uiHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        animationStr = animationStr + " " + name.charAt(count);
-                        mTextName.setText(animationStr);
-                        vibEffect();
+
+                if (!exited) {
+                    uiHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            animationStr = animationStr + " " + name.charAt(count);
+                            mTextName.setText(animationStr);
+                            vibEffect();
+                        }
+                    });
+                    try {
+                        Thread.sleep(3000);
+                    } catch (Exception e) {
+                        Log.e("ERROR", "ERROR-HERE");
                     }
-                });
-                try {
-                    Thread.sleep(3000);
-                } catch (Exception e) {
-                    Log.e("ERROR", "ERROR-HERE");
+                    count++;
                 }
-                count++;
             }
         }
     }
@@ -174,7 +180,6 @@ public class MainActivity extends AppCompatActivity {
                     .setBackground(getDrawable(R.drawable.counter_style_wide));
             ((TextView) findViewById(R.id.textDays))
                     .setTextColor(getResources().getColor(R.color.colorPrimaryDark));
-
         }
     }
 
@@ -185,5 +190,12 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
+        exited = true;
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        exited = false;
     }
 }
