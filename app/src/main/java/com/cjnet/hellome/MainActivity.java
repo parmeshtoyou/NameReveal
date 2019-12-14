@@ -15,24 +15,25 @@ import android.widget.TextView;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
 
-    private TextView mTextDays, mTextName;
-    private RelativeLayout layout_Date, layout_Name;
-    private long counterfor;
-    private Date date1, date2;
+    private TextView mTextDays;
+    private TextView mTextName;
+    private RelativeLayout layoutDate;
+    private RelativeLayout layoutName;
+    private long counterFor;
+    private Date date1;
+    private Date date2;
     private Handler uiHandler = new Handler();
-    private Vibrator v;
-    private Thread t;
-    private String eventTime = "07/12/2019 13:00:00";
+    private Vibrator vibrator;
     private String babyName = "NAME";
-    private NameCounter runnable;
-    private boolean exited = false;
-
-    private static final String TAG = "MainActivity";
+    private volatile boolean exited;
+    private static final String DATE_FORMAT = "dd/MM/yyyy hh:mm:ss";
+    private CountDownTimer countDownTimer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,27 +41,30 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         Intent intent = getIntent();
+        //WHAT IS THE USE OF ACTION AND DATA HERE?
+        //FROM WHERE YOU ARE EXPECTING THESE VALUES?
         String action = intent.getAction();
         Uri data = intent.getData();
+        String eventTime = "14/12/2019 19:05:00";
 
-        mTextDays = ((TextView) findViewById(R.id.textDays));
-        mTextName = ((TextView) findViewById(R.id.name_string));
-        layout_Date = (RelativeLayout) findViewById(R.id.date_layout);
-        layout_Name = (RelativeLayout) findViewById(R.id.layout_name);
+        mTextDays = findViewById(R.id.textDays);
+        mTextName = findViewById(R.id.name_string);
+        layoutDate = findViewById(R.id.date_layout);
+        layoutName = findViewById(R.id.layout_name);
 
-        ((RelativeLayout) findViewById(R.id.layout_main))
+        findViewById(R.id.layout_main)
                 .setBackground(getDrawable(R.drawable.hello_me_bg));
-        v = (Vibrator) getApplicationContext().getSystemService(Context.VIBRATOR_SERVICE);
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
+        vibrator = (Vibrator) getApplicationContext().getSystemService(Context.VIBRATOR_SERVICE);
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(DATE_FORMAT, Locale.getDefault());
         try {
             date1 = new Date();
             date2 = simpleDateFormat.parse(eventTime);
-            counterfor = date2.getTime() - date1.getTime();
+            counterFor = date2.getTime() - date1.getTime();
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        new CountDownTimer(counterfor, 1000) {
+        countDownTimer = new CountDownTimer(counterFor, 1000) {
             public void onTick(long millisUntilFinished) {
                 date1 = new Date();
                 printDifference(date1, date2);
@@ -69,7 +73,9 @@ public class MainActivity extends AppCompatActivity {
             public void onFinish() {
                 displayName(babyName);
             }
-        }.start();
+        };
+
+        countDownTimer.start();
     }
 
 
@@ -92,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
         different = different % minutesInMilli;
 
         long elapsedSeconds = different / secondsInMilli;
-        String countDown = "";
+        String countDown;
         String countDownDays = "";
         String countDownHours = "";
         String countDownMins = "00:";
@@ -106,47 +112,45 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         if (elapsedHours > 0) {
-            countDownHours = String.format("%02d", elapsedHours) + ":";
+            countDownHours = String.format(Locale.getDefault(), "%02d", elapsedHours) + ":";
         }
         if (elapsedMinutes > 0) {
-            countDownMins = String.format("%02d", elapsedMinutes) + ":";
+            countDownMins = String.format(Locale.getDefault(), "%02d", elapsedMinutes) + ":";
         }
         if (elapsedSeconds > 0) {
-            countDownSeconds = String.format("%02d", elapsedSeconds) + "";
+            countDownSeconds = String.format(Locale.getDefault(), "%02d", elapsedSeconds) + "";
         }
 
         countDown = countDownDays + countDownHours + countDownMins + countDownSeconds;
         mTextDays.setText(countDown);
-
     }
 
     public void displayName(String name) {
-
-        layout_Date.setVisibility(View.GONE);
-        layout_Name.setVisibility(View.VISIBLE);
-        runnable = new NameCounter(name);
-        t = new Thread(runnable);
+        layoutDate.setVisibility(View.GONE);
+        layoutName.setVisibility(View.VISIBLE);
+        NameCounter runnable = new NameCounter(name);
+        Thread t = new Thread(runnable);
         t.start();
     }
 
 
-    class NameCounter implements Runnable {
-        String name = "", animationStr = "";
+    private class NameCounter implements Runnable {
+        String name;
+        StringBuilder animationStr = new StringBuilder();
         int count = 0;
 
-        public NameCounter(String name) {
+        NameCounter(String name) {
             this.name = name;
         }
 
         @Override
         public void run() {
             while (count < name.length()) {
-
                 if (!exited) {
                     uiHandler.post(new Runnable() {
                         @Override
                         public void run() {
-                            animationStr = animationStr + " " + name.charAt(count);
+                            animationStr = animationStr.append(" ").append(name.charAt(count));
                             mTextName.setText(animationStr);
                             vibEffect();
                         }
@@ -166,17 +170,17 @@ public class MainActivity extends AppCompatActivity {
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
-            ((RelativeLayout) findViewById(R.id.layout_main))
+            findViewById(R.id.layout_main)
                     .setBackground(getDrawable(R.drawable.hello_me_bg));
-            ((TextView) findViewById(R.id.textDays))
+            findViewById(R.id.textDays)
                     .setBackground(getDrawable(R.drawable.counter_style));
             ((TextView) findViewById(R.id.textDays))
                     .setTextColor(getResources().getColor(R.color.colorWhite));
 
         } else {
-            ((RelativeLayout) findViewById(R.id.layout_main))
+            findViewById(R.id.layout_main)
                     .setBackground(getDrawable(R.drawable.hello_me_bg_wide));
-            ((TextView) findViewById(R.id.textDays))
+            findViewById(R.id.textDays)
                     .setBackground(getDrawable(R.drawable.counter_style_wide));
             ((TextView) findViewById(R.id.textDays))
                     .setTextColor(getResources().getColor(R.color.colorPrimaryDark));
@@ -184,13 +188,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void vibEffect() {
-        v.vibrate(100);
+        vibrator.vibrate(100);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
         exited = true;
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        countDownTimer = null; //to avoid memory leak
     }
 
     @Override
